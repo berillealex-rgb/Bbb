@@ -124,6 +124,13 @@ body[data-screen]:not([data-screen="home"]) #slash{
 /* paper */
 .paper{max-width:760px;background:var(--white);color:var(--ink);padding:22px 26px;font-size:16px;line-height:1.5;clip-path:polygon(0 4%, 2% 0, 100% 0, 100% 94%, 98% 100%, 0 100%);transform:rotate(-.6deg);box-shadow:10px 10px 0 rgba(0,0,0,.55);margin-bottom:3vh}
 
+/* mobile-friendly paper (remove rotation and boost contrast/readability) */
+@media (max-width:520px){
+  .paper{transform:none;padding:14px;font-size:18px;line-height:1.45;}
+  #tagline{transform:none;padding:12px 14px;}
+  #big-name .ransom{font-size:clamp(28px,10vw,64px);} 
+}
+
 /* skills */
 .skill-group{margin-bottom:4vh;max-width:920px}
 .skill-row{display:flex;align-items:center;gap:14px;margin-bottom:12px}
@@ -268,12 +275,23 @@ body[data-screen]:not([data-screen="home"]) #slash{
         </div>
       </section>
 
-      <!-- SETTINGS -->
+      <!-- SETTINGS (short header: PARAM) -->
       <section id="screen-settings" class="screen sub" aria-label="Paramètres">
-        <div class="screen-head"><span class="ransom" data-ransom="PARAMETRES"></span></div>
+        <div class="screen-head"><span class="ransom" data-ransom="PARAM"></span></div>
         <button class="back-hint" data-back>Esc · Retour</button>
         <div class="paper">
           <p>Paramètres PWA (installation, notifications à activer plus tard), sauvegarde, thèmes.</p>
+          <hr style="margin:14px 0;border:none;border-top:1px solid rgba(0,0,0,.06)">
+          <div style="font-size:13px;color:#333;line-height:1.4">
+            <strong>Ressources utilisées (liens) :</strong>
+            <ul style="margin:8px 0 0;padding-left:18px;color:#222">
+              <li><a href="https://raw.githubusercontent.com/berillealex-rgb/Bbb/main/Persona5main.woff2" target="_blank" rel="noopener">Persona5main.woff2 (repo Bbb)</a></li>
+              <li><a href="https://raw.githubusercontent.com/Omicron69/persona5-style-portfolio/main/assets/sfx/select.mp3" target="_blank" rel="noopener">SFX select (Omicron69)</a></li>
+              <li><a href="https://raw.githubusercontent.com/Omicron69/persona5-style-portfolio/main/assets/menus/home.jpg" target="_blank" rel="noopener">Menu art (home) — Omicron69</a></li>
+              <li><a href="https://raw.githubusercontent.com/berillealex-rgb/Bbb/main/bg.png" target="_blank" rel="noopener">bg.png (repo Bbb)</a></li>
+            </ul>
+            <p style="margin-top:8px;color:#444">Si les images ou la police n'apparaissent pas, ouvre la page via GitHub Pages (HTTPS) ou active le mode en ligne. Dis‑moi si tu veux que j'inline la police Persona5main directement dans le fichier.</p>
+          </div>
         </div>
       </section>
     </div>
@@ -302,7 +320,7 @@ body[data-screen]:not([data-screen="home"]) #slash{
 
       <button class="tab" data-key="settings">
         <svg class="tab-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke="currentColor" stroke-width="1.4"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06A2 2 0 1 1 2.28 16.9l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09c.66 0 1.22-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 7.1 2.28l.06.06c.44.44 1.1.62 1.7.49.6-.13 1.06-.6 1.2-1.2.13-.6.01-1.28-.49-1.7L11.9.3A2 2 0 1 1 16.9 3.1l-.06.06c-.44.44-.62 1.1-.49 1.7.13.6.6 1.06 1.2 1.2.6.13 1.28.01 1.7-.49l.06-.06A2 2 0 1 1 21.72 7.1l-.06.06c-.44.44-.62 1.1-.49 1.7.13.6.6 1.06 1.2 1.2.6.13 1.28.01 1.7-.49" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span class="tab-label">Paramètres</span>
+        <span class="tab-label">Param</span>
       </button>
     </nav>
   </div>
