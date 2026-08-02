@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Persona5 — Time Manager</title>
+
+  <!-- Minimal manifest (inline) -->
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Persona5 Time Manager","short_name":"P5 Time","start_url":".","display":"standalone","background_color":"#0b0b0b","theme_color":"#e60012"}'>
+
+  <!-- Google Fonts (Option B - external) -->
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Persona5main font (served from your repo; small file) -->
+  <style>
+@font-face{
+  font-family: 'Persona5main';
+  src: url('https://raw.githubusercontent.com/berillealex-rgb/Bbb/main/Persona5main.woff2') format('woff2');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ----------------- Core CSS (adapté depuis css/style.css) ----------------- */
+:root{
+  --red:#e60012;
+  --red-deep:#a3000c;
+  --black:#0b0b0d;
+  --white:#f6f4ef;
+  --ink:#111;
+  --nav-height:72px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body,#root{height:100%;}
+body{
+  background:var(--black);
+  color:var(--white);
+  font-family: "Barlow Condensed", "Inter", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing:antialiased;
+  user-select:none;
+  overflow:hidden;
+}
+
+/* Use Persona5 font for ransom headings when available, fallback to Barlow */
+.ransom{font-family:'Persona5main',"Barlow Condensed","Inter",system-ui, sans-serif;}
+
+/* Background layers */
+#bg{position:fixed;inset:-6vmax;z-index:0;pointer-events:none;}
+.bg-layer{position:absolute;inset:0;will-change:transform;}
+/* stripes */
+#bg-stripes{
+  background:repeating-linear-gradient(115deg,
+    var(--red) 0 46px, var(--red-deep) 46px 52px,
+    var(--red) 52px 120px, #c4000f 120px 126px);
+  animation:stripeDrift 22s linear infinite;
+}
+@keyframes stripeDrift{from{background-position:0 0;}to{background-position:520px 0;}}
+/* halftone */
+#bg-halftone{
+  background-image:radial-gradient(circle, rgba(0,0,0,.35) 1.6px, transparent 1.7px);
+  background-size:14px 14px;
+  mix-blend-mode:multiply;
+  animation:halftoneDrift 30s linear infinite;
+}
+@keyframes halftoneDrift{from{background-position:0 0;}to{background-position:-140px 140px;}}
+/* vignette */
+#bg-vignette{
+  background:radial-gradient(ellipse at 32% 40%, transparent 30%, rgba(0,0,0,.72) 100%);
+}
+
+/* black slash */
+#slash{
+  position:fixed;z-index:1;inset:0;pointer-events:none;
+  background:var(--black);
+  clip-path:polygon(58% 0, 100% 0, 100% 100%, 40% 100%, 52% 62%, 45% 60%, 60% 24%, 51% 22%);
+  transition:clip-path .8s cubic-bezier(.8,0,.15,1);
+}
+body[data-screen]:not([data-screen="home"]) #slash{
+  clip-path:polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 62%, 0 60%, 0 24%, 0 22%);
+}
+
+/* shell & hud */
+#shell{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;}
+#hud-top{display:flex;justify-content:space-between;align-items:flex-start;padding:18px 20px 0;}
+.hud-tag{background:var(--black);color:var(--white);padding:6px 12px;transform:rotate(-2deg);font-weight:700;font-size:13px;box-shadow:4px 4px 0 rgba(0,0,0,.35);} 
+.hud-tag.alt{background:var(--white);color:var(--black);transform:rotate(1.5deg);}
+
+/* stage */
+#stage{flex:1;position:relative;overflow:hidden;}
+
+/* screens */
+.screen{
+  position:absolute;inset:0;padding:3vh 5vw;display:none;overflow-y:auto;overflow-x:hidden;
+}
+.screen.active{display:block;}
+.screen::-webkit-scrollbar{width:8px}
+.screen::-webkit-scrollbar-thumb{background:var(--red)}
+
+/* home specifics */
+#intro-eyebrow{font-size:clamp(13px,1.6vw,18px);letter-spacing:.5em;text-transform:uppercase;margin-bottom:1.2vh;font-weight:800;text-shadow:2px 2px 0 var(--black)}
+#big-name{line-height:.92;margin-bottom:2.5vh;}
+#big-name .ransom{font-size:clamp(40px,8.5vw,96px);display:block;font-weight:900;}
+#tagline{max-width:560px;font-size:clamp(14px,1.4vw,18px);line-height:1.45;background:var(--black);padding:12px 18px;transform:rotate(-1deg);box-shadow:6px 6px 0 rgba(0,0,0,.3);}
+
+/* menu */
+#menu{margin-top:4vh;display:flex;flex-direction:column;align-items:flex-start;gap:.6vh;}
+.menu-item{background:none;border:0;color:var(--white);text-align:left;position:relative;padding:6px 14px;cursor:pointer;font-size:clamp(20px,4.2vw,42px);transform:translateX(-60px);opacity:0;}
+.loaded .menu-item{animation:menuIn .55s cubic-bezier(.2,1.2,.3,1) forwards}
+@keyframes menuIn{to{transform:translateX(0);opacity:1}}
+.menu-item .cursor-mark{position:absolute;right:-46px;top:50%;transform:translateY(-50%);opacity:0;color:var(--white)}
+.menu-item.sel .cursor-mark{opacity:1}
+
+/* ransom letters helper */
+.ransom{display:inline-block;white-space:nowrap}
+.ransom .ch{display:inline-block;padding:0 .01em;transition:transform .15s; color:var(--white);} 
+
+/* sub screens chrome */
+.sub .screen-head{margin:1vh 0 3.5vh;position:relative;display:inline-block}
+.sub .screen-head .ransom{font-size:clamp(36px,6vw,74px);font-weight:900}
+.sub .screen-head::after{content:"";position:absolute;left:-6px;bottom:-10px;height:10px;width:105%;background:var(--red);transform:skewX(-24deg)}
+
+/* paper */
+.paper{max-width:760px;background:var(--white);color:var(--ink);padding:22px 26px;font-size:16px;line-height:1.5;clip-path:polygon(0 4%, 2% 0, 100% 0, 100% 94%, 98% 100%, 0 100%);transform:rotate(-.6deg);box-shadow:10px 10px 0 rgba(0,0,0,.55);margin-bottom:3vh}
+
+/* skills */
+.skill-group{margin-bottom:4vh;max-width:920px}
+.skill-row{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.skill-row .name{width:180px;flex-shrink:0;font-size:15px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.skill-bar{flex:1;height:20px;background:rgba(0,0,0,.55);position:relative;transform:skewX(-18deg);overflow:hidden;max-width:520px}
+.skill-bar .fill{position:absolute;inset:0;width:0;background:var(--white);background-image:repeating-linear-gradient(90deg,transparent 0 26px, rgba(230,0,18,.22) 26px 30px);transition:width .9s cubic-bezier(.2,1,.3,1)}
+.skill-row .lv{font-weight:900;width:70px;text-align:right}
+
+/* bottom nav tailored */
+.bottom-nav{
+  position:fixed;left:12px;right:12px;bottom:12px;height:var(--nav-height);display:flex;gap:10px;align-items:center;justify-content:space-between;background:linear-gradient(180deg, rgba(0,0,0,0.62), rgba(255,255,255,0.02));border-radius:16px;padding:8px;box-shadow:0 20px 40px rgba(0,0,0,0.7);z-index:60;border:1px solid rgba(255,255,255,0.02);
+}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--white);text-decoration:none;font-size:12px;opacity:0.86;padding:8px;border-radius:10px;background:transparent;border:none;transition:transform .18s cubic-bezier(.2,.9,.2,1),box-shadow .18s,background .18s}
+.tab.active{transform:translateY(-6px);background:linear-gradient(135deg, rgba(230,0,18,0.12), rgba(255,255,255,0.02));box-shadow:0 10px 24px rgba(230,0,18,0.10);opacity:1}
+.tab-icon{width:22px;height:22px;margin-bottom:4px;display:block}
+
+/* Wipe overlay (uses same shapes as repo) */
+#wipe{position:fixed;inset:-10%;z-index:70;pointer-events:none}
+#wipe .pane{position:absolute;inset:0;transform:translateX(-130%) skewX(-14deg)}
+#wipe .p1{background:var(--red)}
+#wipe .p2{background:var(--black)}
+#wipe .p3{background:var(--white)}
+/* runtime wipe: 450ms total, swap at ~45% (JS coordinates) */
+#wipe.go .pane{animation:wipeAcross .45s cubic-bezier(.75,0,.2,1) forwards}
+#wipe.go .p2{animation-delay:.03s}
+#wipe.go .p1{animation-delay:.06s}
+@keyframes wipeAcross{0%{transform:translateX(-130%) skewX(-14deg)}45%{transform:translateX(0%) skewX(-14deg)}55%{transform:translateX(0%) skewX(-14deg)}100%{transform:translateX(130%) skewX(-14deg)}}
+#wipe .flash{position:absolute;inset:0;background:var(--white);opacity:0}
+#wipe.go .flash{animation:flash .45s linear forwards}
+@keyframes flash{0%,44%{opacity:0}48%{opacity:1}56%{opacity:0}100%{opacity:0}}
+
+/* accessible reduced motion */
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important} #wipe .pane,#wipe .flash{animation:none !important}}
+
+/* responsive tweaks */
+@media (min-width:720px){.bottom-nav{left:20%;right:20%}}
+  </style>
+</head>
+<body data-screen="home" class="loaded">
+
+  <!-- background SVG layers (inline; visual layers rebuilt like the repo) -->
+  <div id="bg" aria-hidden="true">
+    <div class="bg-layer" id="bg-stripes"></div>
+    <svg class="bg-star" style="left:6%;top:8%;width:26vmax;height:26vmax" viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,0 60,35 98,35 68,57 78,94 50,72 22,94 32,57 2,35 40,35" fill="#000"/></svg>
+    <svg class="bg-star s2" style="right:4%;bottom:6%;width:34vmax;height:34vmax" viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,0 60,35 98,35 68,57 78,94 50,72 22,94 32,57 2,35 40,35" fill="#fff"/></svg>
+    <div class="bg-layer" id="bg-halftone"></div>
+    <div class="bg-layer" id="bg-vignette"></div>
+  </div>
+
+  <div id="slash" aria-hidden="true"></div>
+
+  <!-- Wipe overlay -->
+  <div id="wipe" aria-hidden="true">
+    <div class="pane p3"></div>
+    <div class="pane p2"></div>
+    <div class="pane p1"></div>
+    <div class="flash"></div>
+  </div>
+
+  <div id="shell">
+    <div id="hud-top">
+      <div class="hud-tag display">PERSONA5</div>
+      <div class="hud-tag alt">Time Manager</div>
+    </div>
+
+    <div id="stage">
+      <!-- HOME -->
+      <section id="screen-home" class="screen active" aria-label="Accueil">
+        <div id="intro-eyebrow">Gestion du temps</div>
+
+        <h1 id="big-name" aria-hidden="true">
+          <span class="ransom" data-ransom="PERSONA5"></span>
+          <span class="ransom" data-ransom="PLANNER"></span>
+        </h1>
+
+        <div id="tagline" class="paper">
+          Gestion intelligente des créneaux, progression façon Confidants (Savoir / Diligence / Charme), détection des temps libres et suggestions.
+        </div>
+
+        <nav id="menu" aria-label="Menu principal" style="margin-top:22px">
+          <!-- flèche statique retirée pour le premier item -->
+          <button class="menu-item sel" data-target="calendar">
+            <span class="ransom"><span class="ch box">P</span><span class="ch">lanning</span></span>
+          </button>
+
+          <button class="menu-item" data-target="confidants">
+            <span class="ransom"><span class="ch box">C</span><span class="ch">onfidants</span></span>
+            <span class="cursor-mark">◀</span>
+          </button>
+
+          <button class="menu-item" data-target="stats">
+            <span class="ransom"><span class="ch box">S</span><span class="ch">tats</span></span>
+            <span class="cursor-mark">◀</span>
+          </button>
+
+          <button class="menu-item" data-target="settings">
+            <span class="ransom"><span class="ch box">O</span><span class="ch">ptions</span></span>
+            <span class="cursor-mark">◀</span>
+          </button>
+        </nav>
+      </section>
+
+      <!-- CALENDAR -->
+      <section id="screen-calendar" class="screen sub" aria-label="Planning">
+        <div class="screen-head"><span class="ransom" data-ransom="PLANNING"></span></div>
+        <button class="back-hint" data-back>Esc · Retour</button>
+        <div class="paper" id="calendar-body">
+          <p>Planning interne — Créer/éditer/supprimer des créneaux et détecter temps libre. (Fonctionnalités complètes à venir dans l'itération suivante.)</p>
+        </div>
+      </section>
+
+      <!-- CONFIDANTS -->
+      <section id="screen-confidants" class="screen sub" aria-label="Confidants">
+        <div class="screen-head"><span class="ransom" data-ransom="CONFIDANTS"></span></div>
+        <button class="back-hint" data-back>Esc · Retour</button>
+        <div class="paper" id="confidants-body">
+          <p>Liste personnalisable de confidants (noms + notes). Données persistées en local (IndexedDB dans la suite).</p>
+        </div>
+      </section>
+
+      <!-- STATS -->
+      <section id="screen-stats" class="screen sub" aria-label="Stats">
+        <div class="screen-head"><span class="ransom" data-ransom="STATS"></span></div>
+        <button class="back-hint" data-back>Esc · Retour</button>
+        <div class="skill-group">
+          <h3>Progression</h3>
+          <div class="skill-row">
+            <div class="name">Savoir</div>
+            <div class="skill-bar" aria-hidden><div class="fill" style="width:40%"></div></div>
+            <div class="lv">Lv 2</div>
+          </div>
+          <div class="skill-row">
+            <div class="name">Diligence</div>
+            <div class="skill-bar" aria-hidden><div class="fill" style="width:28%"></div></div>
+            <div class="lv">Lv 1</div>
+          </div>
+          <div class="skill-row">
+            <div class="name">Charme</div>
+            <div class="skill-bar" aria-hidden><div class="fill" style="width:12%"></div></div>
+            <div class="lv">Lv 0</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="screen-settings" class="screen sub" aria-label="Paramètres">
+        <div class="screen-head"><span class="ransom" data-ransom="PARAMETRES"></span></div>
+        <button class="back-hint" data-back>Esc · Retour</button>
+        <div class="paper">
+          <p>Paramètres PWA (installation, notifications à activer plus tard), sauvegarde, thèmes.</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Bottom nav: using inline SVG icons (no emoji) -->
+    <nav id="hud-bottom" class="bottom-nav" role="navigation" aria-label="Navigation principale">
+      <button class="tab active" data-key="home" aria-current="page">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10.5z" fill="currentColor"/></svg>
+        <span class="tab-label">Accueil</span>
+      </button>
+
+      <button class="tab" data-key="calendar">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M16 3v4M8 3v4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <span class="tab-label">Planning</span>
+      </button>
+
+      <button class="tab" data-key="confidants">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="tab-label">Confidants</span>
+      </button>
+
+      <button class="tab" data-key="stats">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 19v-9M12 19v-5M19 19V8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span class="tab-label">Stats</span>
+      </button>
+
+      <button class="tab" data-key="settings">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke="currentColor" stroke-width="1.4"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06A2 2 0 1 1 2.28 16.9l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09c.66 0 1.22-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 7.1 2.28l.06.06c.44.44 1.1.62 1.7.49.6-.13 1.06-.6 1.2-1.2.13-.6.01-1.28-.49-1.7L11.9.3A2 2 0 1 1 16.9 3.1l-.06.06c-.44.44-.62 1.1-.49 1.7.13.6.6 1.06 1.2 1.2.6.13 1.28.01 1.7-.49l.06-.06A2 2 0 1 1 21.72 7.1l-.06.06c-.44.44-.62 1.1-.49 1.7.13.6.6 1.06 1.2 1.2.6.13 1.28.01 1.7-.49" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="tab-label">Paramètres</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- audio (served from Omicron69 repo raw URL) -->
+  <audio id="sfx-select" src="https://raw.githubusercontent.com/Omicron69/persona5-style-portfolio/main/assets/sfx/select.mp3" preload="auto"></audio>
+
+  <script>
+/* ========== Vanilla JS navigation + wipe (450ms medium) ========== */
+(function(){
+  // route map
+  const ROUTES = {"":"home","#/":"home","#/home":"home","#/calendar":"calendar","#/confidants":"confidants","#/stats":"stats","#/settings":"settings"};
+  const WIPE_TOTAL = 450;
+  const WIPE_SWAP_MS = Math.round(WIPE_TOTAL * 0.45);
+
+  const screens = {
+    home: document.getElementById('screen-home'),
+    calendar: document.getElementById('screen-calendar'),
+    confidants: document.getElementById('screen-confidants'),
+    stats: document.getElementById('screen-stats'),
+    settings: document.getElementById('screen-settings')
+  };
+  const tabs = Array.from(document.querySelectorAll('.bottom-nav .tab'));
+  const menuItems = Array.from(document.querySelectorAll('.menu-item'));
+  const backButtons = Array.from(document.querySelectorAll('[data-back]'));
+  const wipe = document.getElementById('wipe');
+  const sfx = document.getElementById('sfx-select');
+
+  let animating = false;
+
+  // render ransom text from data-ransom attributes (fixed: show spaces properly)
+  function renderRansom(){
+    const nodes = document.querySelectorAll('[data-ransom]');
+    nodes.forEach(node=>{
+      const text = (node.getAttribute('data-ransom')||'').toUpperCase();
+      // idempotent clear
+      node.innerHTML = '';
+      for (let i=0;i<text.length;i++){
+        const ch = text[i];
+        const span = document.createElement('span');
+        span.className = 'ch';
+        if (ch === ' ') span.innerHTML = '&nbsp;'; else span.textContent = ch;
+        node.appendChild(span);
+      }
+    });
+  }
+
+  function setActiveScreen(key){
+    Object.keys(screens).forEach(k=>{
+      const el = screens[k];
+      if (!el) return;
+      el.classList.toggle('active', k===key);
+    });
+    document.body.setAttribute('data-screen', key === 'home' ? 'home' : key);
+    tabs.forEach(btn=>{
+      const k = btn.getAttribute('data-key');
+      const is = k === key;
+      btn.classList.toggle('active', is);
+      if (is) btn.setAttribute('aria-current','page'); else btn.removeAttribute('aria-current');
+    });
+  }
+
+  function navigateTo(target){
+    if (!target || animating) return;
+    const currentHash = window.location.hash;
+    const current = ROUTES[currentHash] || 'home';
+    if (target === current) return;
+
+    animating = true;
+    if (sfx && typeof sfx.play === 'function'){ try{ sfx.currentTime = 0; sfx.play().catch(()=>{}); }catch(e){} }
+    if (wipe) wipe.classList.add('go');
+
+    // swap at midpoint
+    setTimeout(()=>{
+      setActiveScreen(target);
+      // update hash (won't retrigger navigation because animating blocks reentry)
+      window.location.hash = '#/' + target;
+    }, WIPE_SWAP_MS);
+
+    // end of animation cleanup
+    const onEnd = ()=>{
+      if (wipe) wipe.classList.remove('go');
+      animating = false;
+      if (wipe) wipe.removeEventListener('animationend', onEnd);
+    };
+    if (wipe) wipe.addEventListener('animationend', onEnd);
+    else setTimeout(onEnd, WIPE_TOTAL+50);
+  }
+
+  // attach
+  tabs.forEach(btn=> btn.addEventListener('click', ()=> navigateTo(btn.getAttribute('data-key'))));
+  menuItems.forEach(mi=> mi.addEventListener('click', ()=> navigateTo(mi.getAttribute('data-target'))));
+  backButtons.forEach(b=> b.addEventListener('click', ()=> navigateTo('home')));
+  window.addEventListener('hashchange', ()=> {
+    const target = ROUTES[window.location.hash] || 'home';
+    navigateTo(target);
+  });
+
+  // initial
+  document.addEventListener('DOMContentLoaded', ()=>{
+    renderRansom();
+    const initial = ROUTES[window.location.hash] || 'home';
+    setActiveScreen(initial);
+    // trigger menu animation
+    setTimeout(()=> document.body.classList.add('loaded'), 80);
+  });
+
+  // small clock (keeps safe if element absent)
+  (function clock(){
+    const el = document.getElementById('clock');
+    if (!el) return;
+    function update(){ const d=new Date(); el.textContent = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
+    update(); setInterval(update,30000);
+  })();
+
+  // keyboard nav for desktop testing
+  window.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape'){ navigateTo('home'); return; }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
+      const order = ['home','calendar','confidants','stats','settings'];
+      const cur = document.body.getAttribute('data-screen') || 'home';
+      let i = order.indexOf(cur);
+      if (i === -1) i = 0;
+      i = e.key === 'ArrowLeft' ? Math.max(0,i-1) : Math.min(order.length-1,i+1);
+      navigateTo(order[i]);
+    }
+  });
+
+})();
+  </script>
+</body>
+</html>
